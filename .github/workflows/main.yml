@@ -3,7 +3,7 @@ name: Upload repo files to Azure Blob
 on:
   push:
     branches:
-      - main   # change if you want another branch
+      - main   # Runs when you push to main branch
 
 jobs:
   upload:

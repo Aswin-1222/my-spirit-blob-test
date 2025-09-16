@@ -3,31 +3,32 @@ name: Upload repo files to Azure Blob
 on:
   push:
     branches:
-      - main   # Runs when you push to main branch
+      - main
 
 jobs:
   upload:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout repo files
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # Step 2: Install Azure CLI
       - name: Install Azure CLI
         run: |
           curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
 
-      # Step 3: Upload all files to Blob
+      - name: Ensure container exists
+        run: |
+          az storage container create \
+            --name mycontainer \
+            --connection-string "${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}" \
+            --public-access off
+
       - name: Upload files to Azure Blob
         run: |
-          for file in $(find . -type f ! -path "./.git/*" ! -path "./.github/*"); do
-            echo "Uploading $file"
-            az storage blob upload \
-              --connection-string "${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}" \
-              --container-name mycontainer \
-              --name "$file" \
-              --file "$file" \
-              --overwrite
-          done
+          az storage blob upload-batch \
+            --connection-string "${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}" \
+            --destination mycontainer \
+            --source . \
+            --pattern "*" \
+            --overwrite

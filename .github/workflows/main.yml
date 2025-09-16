@@ -1,0 +1,44 @@
+name: Build & Push Function App to ACR
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  acr-build-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: ACR Login
+        run: az acr login --name ${{ secrets.ACR_NAME }}
+
+      - name: Build and Push Docker Image
+        run: |
+          IMAGE_TAG=${{ github.sha }}
+          docker build -t ${{ secrets.ACR_NAME }}.azurecr.io/rb_function_app:$IMAGE_TAG -t ${{ secrets.ACR_NAME }}.azurecr.io/rb_function_app:latest .
+          docker push ${{ secrets.ACR_NAME }}.azurecr.io/rb_function_app:$IMAGE_TAG
+          docker push ${{ secrets.ACR_NAME }}.azurecr.io/rb_function_app:latest
+
+      - name: Update Function App to use new image
+        run: |
+          az functionapp config container set \
+            --name ${{ secrets.FUNCTION_APP_NAME }} \
+            --resource-group ${{ secrets.RESOURCE_GROUP }} \
+            --image ${{ secrets.ACR_NAME }}.azurecr.io/rb_function_app:${{ github.sha }} \
+            --registry-login-server ${{ secrets.ACR_NAME }}.azurecr.io \
+            --registry-username ${{ secrets.ACR_USERNAME }} \
+            --registry-password ${{ secrets.ACR_PASSWORD }}
+
+      - name: Restart Function App
+        run: |
+          az functionapp restart \
+            --name ${{ secrets.FUNCTION_APP_NAME }} \
+            --resource-group ${{ secrets.RESOURCE_GROUP }}

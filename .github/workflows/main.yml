@@ -1,9 +1,9 @@
-name: Upload RB_Docker_clean.zip to Azure Blob
+name: Upload repo files to Azure Blob
 
 on:
   push:
     branches:
-      - main   # Runs when you push to main branch
+      - main   # change if you want another branch
 
 jobs:
   upload:
@@ -19,11 +19,15 @@ jobs:
         run: |
           curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
 
-      # Step 3: Upload RB_Docker_clean.zip to Blob
-      - name: Upload to Azure Blob
+      # Step 3: Upload all files to Blob
+      - name: Upload files to Azure Blob
         run: |
-          az storage blob upload \
-            --connection-string "${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}" \
-            --container-name mycontainer \
-            --name RB_Docker_clean.zip \
-            --file ./RB_Docker_clean.zip
+          for file in $(find . -type f ! -path "./.git/*" ! -path "./.github/*"); do
+            echo "Uploading $file"
+            az storage blob upload \
+              --connection-string "${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}" \
+              --container-name mycontainer \
+              --name "$file" \
+              --file "$file" \
+              --overwrite
+          done

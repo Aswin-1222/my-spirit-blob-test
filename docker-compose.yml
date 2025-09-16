@@ -1,0 +1,25 @@
+version: '3.8'
+services:
+  flask_api:
+    build: ./flask/
+    image: nandhakumar72/rb_flask:latest
+    ports:
+      - "5000:5000"
+    networks:
+      - RB_Network
+
+  react_app:
+    build: ./rental-data   
+    image: nandhakumar72/rb_react:latest
+    ports:
+      - "3000:3000"
+    stdin_open: true
+    tty: true
+    depends_on:
+      - flask_api
+    networks:
+      - RB_Network
+
+networks:
+  RB_Network:
+

@@ -1,0 +1,29 @@
+name: Upload RB_Docker_clean.zip to Azure Blob
+
+on:
+  push:
+    branches:
+      - main   # Runs when you push to main branch
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout repo files
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # Step 2: Install Azure CLI
+      - name: Install Azure CLI
+        run: |
+          curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+
+      # Step 3: Upload RB_Docker_clean.zip to Blob
+      - name: Upload to Azure Blob
+        run: |
+          az storage blob upload \
+            --connection-string "${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}" \
+            --container-name mycontainer \
+            --name RB_Docker_clean.zip \
+            --file ./RB_Docker_clean.zip

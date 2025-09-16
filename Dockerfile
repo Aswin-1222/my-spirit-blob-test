@@ -1,20 +1,8 @@
-# Use official Python base image
-FROM python:3.11-slim
+FROM mcr.microsoft.com/azure-functions/python:4-python3.11
 
-# Set working directory
-WORKDIR /app
+WORKDIR /home/site/wwwroot
 
-# Copy requirements file first (if exists)
-COPY requirements.txt .
+COPY requirements.txt /
+RUN pip install -r /requirements.txt
 
-# Install dependencies
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Copy application code
-COPY . .
-
-# Expose Flask port
-EXPOSE 5000
-
-# Run Flask app
-CMD ["python", "app.py"]
+COPY . /home/site/wwwroot
